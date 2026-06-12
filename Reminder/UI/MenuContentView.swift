@@ -1,0 +1,150 @@
+import SwiftUI
+
+/// The dropdown shown when clicking the menu bar item.
+struct MenuContentView: View {
+    @Environment(AppState.self) private var appState
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+            Divider()
+            content
+            Divider()
+            footer
+        }
+        .frame(width: 340)
+        .task { await appState.refresh() }
+    }
+
+    private var header: some View {
+        HStack {
+            Text(Date().formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                .font(.headline)
+            Spacer()
+            if case .signedIn = appState.authState {
+                Button {
+                    Task { await appState.refresh() }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .buttonStyle(.borderless)
+                .help("Refresh now")
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch appState.authState {
+        case .signedOut:
+            signedOutView
+        case .signedIn:
+            if appState.remainingMeetings.isEmpty {
+                emptyView
+            } else {
+                meetingList
+            }
+        }
+    }
+
+    private var signedOutView: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "person.crop.circle.badge.questionmark")
+                .font(.system(size: 32))
+                .foregroundStyle(.secondary)
+            Text("Connect your Google Calendar to see upcoming meetings.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            Button {
+                Task { await appState.signIn() }
+            } label: {
+                if appState.isSigningIn {
+                    Text("Waiting for Google…")
+                } else {
+                    Label("Sign in with Google", systemImage: "person.crop.circle")
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(appState.isSigningIn || !OAuthConfig.isConfigured)
+
+            if !OAuthConfig.isConfigured {
+                Text("Set the OAuth client ID in OAuthConfig.swift first.")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .multilineTextAlignment(.center)
+            }
+            if let error = appState.lastError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(3)
+            }
+        }
+        .padding(20)
+    }
+
+    private var emptyView: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "sun.max")
+                .font(.system(size: 28))
+                .foregroundStyle(.secondary)
+            Text("No more meetings today")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+        }
+        .padding(24)
+    }
+
+    private var meetingList: some View {
+        ScrollView {
+            VStack(spacing: 2) {
+                ForEach(appState.remainingMeetings) { meeting in
+                    MeetingRowView(
+                        meeting: meeting,
+                        isNext: meeting.id == appState.nextMeeting?.id
+                    )
+                }
+            }
+            .padding(6)
+        }
+        .frame(maxHeight: 320)
+    }
+
+    private var footer: some View {
+        HStack {
+            if let error = appState.lastError, case .signedIn = appState.authState {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.yellow)
+                    .help(error)
+            } else if let updated = appState.lastUpdated {
+                Text("Updated \(updated.formatted(date: .omitted, time: .shortened))")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+            Spacer()
+            Button {
+                openSettings()
+                NSApp.activate(ignoringOtherApps: true)
+            } label: {
+                Image(systemName: "gearshape")
+            }
+            .buttonStyle(.borderless)
+            .help("Settings")
+
+            Button {
+                NSApp.terminate(nil)
+            } label: {
+                Image(systemName: "power")
+            }
+            .buttonStyle(.borderless)
+            .help("Quit Reminder")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+    }
+}
