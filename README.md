@@ -1,6 +1,6 @@
-# Reminder
+# Punctual
 
-A native macOS menu bar app for Google Calendar meetings — never be late to a call again.
+A native macOS menu bar app for Google Calendar meetings — never walk in late again.
 
 - **Menu bar countdown**: your next meeting and how long until it starts ("Standup in 12m")
 - **Today at a glance**: click the menu bar item for today's remaining meetings with one-click **Join** (Google Meet, Zoom, Microsoft Teams)
@@ -17,22 +17,22 @@ Until there's a notarized release build, build from source:
 
 ```
 git clone <repo-url>
-cd reminder
-open Reminder.xcodeproj
+cd punctual
+open Punctual.xcodeproj
 ```
 
 Set Signing & Capabilities → Team to your (free) Personal Team, then Run. The app appears in the menu bar — there is no Dock icon.
 
-If you received a pre-built `Reminder.app` instead: it isn't notarized, so on first launch approve it under **System Settings → Privacy & Security → "Open Anyway"**.
+If you received a pre-built `Punctual.app` instead: it isn't notarized, so on first launch approve it under **System Settings → Privacy & Security → "Open Anyway"**.
 
 ## Sign-in and the "unverified app" screen
 
-The app ships with a shared OAuth client ID. Until Google finishes verifying the app for the sensitive `calendar.readonly` scope, the Google sign-in page may show an *"unverified app"* warning — continue via **Advanced → Go to Reminder**. Refresh tokens issued while the consent screen is in *Testing* status expire after 7 days; the app handles this by signing you out, and signing in again takes one click.
+The app ships with a shared OAuth client ID. Until Google finishes verifying the app for the sensitive `calendar.readonly` scope, the Google sign-in page may show an *"unverified app"* warning — continue via **Advanced → Go to Punctual**. Refresh tokens issued while the consent screen is in *Testing* status expire after 7 days; the app handles this by signing you out, and signing in again takes one click.
 
 ## Architecture
 
 ```
-ReminderApp (SwiftUI App)
+PunctualApp (SwiftUI App)
  ├─ MenuBarExtra(.window)        menu bar label + dropdown
  ├─ Settings scene
  └─ AppState (@Observable)       single source of truth
@@ -48,11 +48,11 @@ No third-party dependencies. Debug builds include **Settings → Debug → "Trig
 
 ## Maintainer: OAuth client
 
-The shared client ID in `Reminder/Auth/OAuthConfig.swift` is a public identifier — Google's "iOS" client type for installed apps has no client secret, and the code exchange is PKCE-protected, so committing it is safe and standard. Setup:
+The shared client ID in `Punctual/Auth/OAuthConfig.swift` is a public identifier — Google's "iOS" client type for installed apps has no client secret, and the code exchange is PKCE-protected, so committing it is safe and standard. Setup:
 
 1. [console.cloud.google.com](https://console.cloud.google.com) → create a project → enable **Google Calendar API**.
-2. **OAuth consent screen**: User type **External**. App name `Reminder`, your support email.
-3. **Credentials → Create credentials → OAuth client ID** → type **iOS**, bundle ID `com.jakubostwald.Reminder`. Paste the resulting client ID into `OAuthConfig.swift`.
+2. **OAuth consent screen**: User type **External**. App name `Punctual`, your support email.
+3. **Credentials → Create credentials → OAuth client ID** → type **iOS**, bundle ID `com.jakubostwald.Punctual`. Paste the resulting client ID into `OAuthConfig.swift`.
 4. **Verification** (lifts the unverified-app warning and the 100-user cap):
    - Host a homepage and privacy policy on a domain you can verify in [Google Search Console](https://search.google.com/search-console) — a GitHub Pages site works.
    - On the consent screen, set the homepage, privacy policy URL, and authorized domain; add the `calendar.readonly` scope with a justification ("displays the user's upcoming meetings in the macOS menu bar").

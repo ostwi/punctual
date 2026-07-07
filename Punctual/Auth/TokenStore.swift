@@ -14,7 +14,7 @@ struct OAuthTokens: Codable {
 /// Writes are delete-then-add so a code-signature change between builds
 /// degrades to "signed out" instead of a permanent errSecAuthFailed.
 struct TokenStore {
-    private let service = "com.jakubostwald.Reminder.google-oauth"
+    private let service = "com.jakubostwald.Punctual.google-oauth"
     private let account = "google"
 
     func load() -> OAuthTokens? {

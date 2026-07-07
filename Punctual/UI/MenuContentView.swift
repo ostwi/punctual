@@ -142,7 +142,7 @@ struct MenuContentView: View {
                 Image(systemName: "power")
             }
             .buttonStyle(.borderless)
-            .help("Quit Reminder")
+            .help("Quit Punctual")
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
