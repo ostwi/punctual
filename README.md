@@ -37,7 +37,7 @@ PunctualApp (SwiftUI App)
  ├─ Settings scene
  └─ AppState (@Observable)       single source of truth
       ├─ GoogleAuthController    OAuth 2.0 + PKCE via ASWebAuthenticationSession; tokens in Keychain
-      ├─ CalendarService         Google Calendar REST v3 (today's events, all selected calendars)
+      ├─ CalendarService         Google Calendar REST v3 (today's + tomorrow's events, all selected calendars)
       ├─ RefreshCoordinator      60 s poll + wake-from-sleep refresh
       ├─ MenuTitleTicker         adaptive countdown timer (1 min / 1 s granularity)
       └─ AlertScheduler          wall-clock alarm + snooze/dismiss state machine
@@ -46,13 +46,15 @@ PunctualApp (SwiftUI App)
 
 No third-party dependencies. Debug builds include **Settings → Debug → "Trigger test alert"** to preview the full-screen alert without waiting for a real meeting.
 
+Unit tests live in `PunctualTests` (join-link extraction, the alert state machine, event dedupe, menu title formatting): `xcodebuild test -scheme Punctual -destination 'platform=macOS'`.
+
 ## Maintainer: OAuth client
 
 The shared client ID in `Punctual/Auth/OAuthConfig.swift` is a public identifier — Google's "iOS" client type for installed apps has no client secret, and the code exchange is PKCE-protected, so committing it is safe and standard. Setup:
 
 1. [console.cloud.google.com](https://console.cloud.google.com) → create a project → enable **Google Calendar API**.
 2. **OAuth consent screen**: User type **External**. App name `Punctual`, your support email.
-3. **Credentials → Create credentials → OAuth client ID** → type **iOS**, bundle ID `com.jakubostwald.Punctual`. Paste the resulting client ID into `OAuthConfig.swift`.
+3. **Credentials → Create credentials → OAuth client ID** → type **iOS**, bundle ID `com.punctualapp.punctual`. Paste the resulting client ID into `OAuthConfig.swift`.
 4. **Verification** (lifts the unverified-app warning and the 100-user cap):
    - Host a homepage and privacy policy on a domain you can verify in [Google Search Console](https://search.google.com/search-console) — a GitHub Pages site works.
    - On the consent screen, set the homepage, privacy policy URL, and authorized domain; add the `calendar.readonly` scope with a justification ("displays the user's upcoming meetings in the macOS menu bar").

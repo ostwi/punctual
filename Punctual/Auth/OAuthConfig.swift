@@ -15,12 +15,12 @@ import Foundation
 ///    (homepage + privacy policy required) to lift the "unverified app"
 ///    warning and the 100-user cap.
 /// 4. Credentials → Create credentials → OAuth client ID → Application type:
-///    **iOS** (bundle ID: com.jakubostwald.Punctual).
+///    **iOS** (bundle ID: com.punctualapp.punctual).
 /// 5. Paste the client ID below.
 ///
 /// Forks that change the bundle ID must create their own client ID.
 enum OAuthConfig {
-    static let clientID = "462617450121-6hnmucjd6j7o3e4irprndq1nv7dnanqe.apps.googleusercontent.com"
+    static let clientID = "149275699257-1rb44h4cc8r4vue8kmf51ntd23lme2sm.apps.googleusercontent.com"
 
     static var isConfigured: Bool { !clientID.hasPrefix("REPLACE_ME") }
 

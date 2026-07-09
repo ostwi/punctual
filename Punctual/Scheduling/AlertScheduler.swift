@@ -1,6 +1,14 @@
 import AppKit
 import Foundation
 
+/// What the scheduler needs from the alert UI; lets tests substitute a spy
+/// for the real per-display NSPanel controller.
+@MainActor
+protocol AlertPresenting: AnyObject {
+    func show()
+    func close()
+}
+
 /// State machine for full-screen meeting alerts.
 ///
 /// One wall-clock timer is always aimed at the earliest pending fire date;
@@ -30,16 +38,28 @@ final class AlertScheduler {
     var onJoin: (Meeting) -> Void = { _ in }
     var leadTime: TimeInterval = AppSettings.alertLeadTime
 
+    /// The meetings currently showing full-screen; observed by the alert views.
+    let presentation = AlertPresentation()
+
+    private let now: () -> Date
+    private let injectedPresenter: AlertPresenting?
     private var states: [AlertKey: State] = [:]
     private var meetingsByKey: [AlertKey: Meeting] = [:]
     private var timer: DispatchSourceTimer?
-    private lazy var windowController = AlertWindowController(
-        presentation: presentation,
-        onJoin: { [weak self] in self?.join($0) },
-        onSnooze: { [weak self] in self?.snooze($0) },
-        onDismiss: { [weak self] in self?.dismiss($0) }
-    )
-    private let presentation = AlertPresentation()
+    private lazy var windowController: AlertPresenting = injectedPresenter
+        ?? AlertWindowController(
+            presentation: presentation,
+            onJoin: { [weak self] in self?.join($0) },
+            onSnooze: { [weak self] in self?.snooze($0) },
+            onDismiss: { [weak self] in self?.dismiss($0) }
+        )
+
+    /// `now` and `presenter` are injection points for tests; production uses
+    /// the wall clock and the real window controller.
+    init(now: @escaping () -> Date = Date.init, presenter: AlertPresenting? = nil) {
+        self.now = now
+        self.injectedPresenter = presenter
+    }
 
     // MARK: - Reconciliation
 
@@ -85,7 +105,7 @@ final class AlertScheduler {
 
         let source = DispatchSource.makeTimerSource(queue: .main)
         // Wall deadline: an absolute moment, unaffected by the Mac sleeping.
-        source.schedule(wallDeadline: .now() + max(nextFire.timeIntervalSinceNow, 0))
+        source.schedule(wallDeadline: .now() + max(nextFire.timeIntervalSince(now()), 0))
         source.setEventHandler { [weak self] in
             self?.fireDueAlerts()
         }
@@ -94,7 +114,7 @@ final class AlertScheduler {
     }
 
     private func fireDueAlerts() {
-        let now = Date()
+        let now = now()
         for (key, _) in states {
             guard let fireDate = fireDate(for: key), fireDate <= now else { continue }
             let lateLimit = key.start.addingTimeInterval(Self.lateGracePeriod)
@@ -127,7 +147,7 @@ final class AlertScheduler {
 
     func snooze(_ meeting: Meeting) {
         let key = AlertKey(eventID: meeting.id, start: meeting.start)
-        states[key] = .snoozed(until: Date().addingTimeInterval(Self.snoozeInterval))
+        states[key] = .snoozed(until: now().addingTimeInterval(Self.snoozeInterval))
         updatePresentation()
         rearmTimer()
     }

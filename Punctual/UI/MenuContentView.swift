@@ -42,7 +42,7 @@ struct MenuContentView: View {
         case .signedOut:
             signedOutView
         case .signedIn:
-            if appState.remainingMeetings.isEmpty {
+            if appState.todaysRemainingMeetings.isEmpty && appState.tomorrowsMeetings.isEmpty {
                 emptyView
             } else {
                 meetingList
@@ -103,11 +103,35 @@ struct MenuContentView: View {
     private var meetingList: some View {
         ScrollView {
             VStack(spacing: 2) {
-                ForEach(appState.remainingMeetings) { meeting in
-                    MeetingRowView(
-                        meeting: meeting,
-                        isNext: meeting.id == appState.nextMeeting?.id
-                    )
+                if appState.todaysRemainingMeetings.isEmpty {
+                    Text("No more meetings today")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.vertical, 6)
+                } else {
+                    ForEach(appState.todaysRemainingMeetings) { meeting in
+                        MeetingRowView(
+                            meeting: meeting,
+                            isNext: meeting.id == appState.nextMeeting?.id
+                        )
+                    }
+                }
+                if !appState.tomorrowsMeetings.isEmpty {
+                    HStack {
+                        Text("Tomorrow")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.top, 8)
+                    .padding(.bottom, 2)
+                    ForEach(appState.tomorrowsMeetings) { meeting in
+                        MeetingRowView(
+                            meeting: meeting,
+                            isNext: meeting.id == appState.nextMeeting?.id
+                        )
+                    }
                 }
             }
             .padding(6)

@@ -57,8 +57,18 @@ final class AppState {
 
     // MARK: - Derived
 
-    /// Today's meetings that have not ended yet.
+    /// Meetings (today and tomorrow) that have not ended yet; feeds the alert scheduler.
     var remainingMeetings: [Meeting] { meetings.filter { !$0.hasEnded } }
+
+    /// Today's not-yet-ended meetings, for the dropdown's main list.
+    var todaysRemainingMeetings: [Meeting] {
+        remainingMeetings.filter { Calendar.current.isDateInToday($0.start) }
+    }
+
+    /// Tomorrow's meetings, for the dropdown's "Tomorrow" section.
+    var tomorrowsMeetings: [Meeting] {
+        meetings.filter { Calendar.current.isDateInTomorrow($0.start) }
+    }
 
     var upcomingMeetings: [Meeting] { meetings.filter { $0.start > Date() } }
 
@@ -74,7 +84,7 @@ final class AppState {
             return
         }
         do {
-            meetings = try await calendarService.fetchTodaysMeetings()
+            meetings = try await calendarService.fetchMeetings()
             lastUpdated = Date()
             lastError = nil
         } catch AuthError.signedOut {
@@ -102,30 +112,7 @@ final class AppState {
 
     private func computeMenuTitle() -> String {
         guard case .signedIn = authState else { return "Sign in" }
-
-        if let next = nextMeeting {
-            return "\(truncated(next.title)) \(countdownPhrase(to: next.start))"
-        }
-        if let current = currentMeeting {
-            return "\(truncated(current.title)) now"
-        }
-        return "No meetings"
-    }
-
-    private func countdownPhrase(to start: Date) -> String {
-        let remaining = start.timeIntervalSinceNow
-        if remaining < 60 {
-            return String(format: "in 0:%02d", max(Int(remaining.rounded()), 0))
-        }
-        let totalMinutes = Int((remaining / 60).rounded(.up))
-        if totalMinutes >= 60 {
-            return "in \(totalMinutes / 60)h \(totalMinutes % 60)m"
-        }
-        return "in \(totalMinutes)m"
-    }
-
-    private func truncated(_ title: String, limit: Int = 24) -> String {
-        title.count <= limit ? title : String(title.prefix(limit - 1)).trimmingCharacters(in: .whitespaces) + "…"
+        return MenuTitleFormatter.title(next: nextMeeting, current: currentMeeting)
     }
 
     // MARK: - Auth actions

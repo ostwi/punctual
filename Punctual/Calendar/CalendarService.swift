@@ -7,8 +7,11 @@ struct CalendarService {
 
     private nonisolated static let baseURL = URL(string: "https://www.googleapis.com/calendar/v3")!
 
-    /// Today's timed meetings across all selected calendars, deduped and sorted by start.
-    func fetchTodaysMeetings() async throws -> [Meeting] {
+    /// Today's and tomorrow's timed meetings across all selected calendars,
+    /// deduped and sorted by start. Fetching a day ahead keeps the menu bar
+    /// useful after the last meeting and lets alerts for early-morning
+    /// meetings arm before an overnight sleep.
+    func fetchMeetings() async throws -> [Meeting] {
         var token = try await auth.validAccessToken()
         do {
             return try await fetchAll(token: token)
@@ -24,14 +27,14 @@ struct CalendarService {
 
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: Date())
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        let endOfTomorrow = calendar.date(byAdding: .day, value: 2, to: startOfDay)!
 
         let meetings = try await withThrowingTaskGroup(of: [Meeting].self) { group in
             for calendarID in calendarIDs {
                 group.addTask {
                     try await Self.fetchEvents(
                         calendarID: calendarID, token: token,
-                        timeMin: startOfDay, timeMax: endOfDay
+                        timeMin: startOfDay, timeMax: endOfTomorrow
                     )
                 }
             }
@@ -39,12 +42,12 @@ struct CalendarService {
             for try await batch in group { merged.append(contentsOf: batch) }
             return merged
         }
-        return dedupe(meetings).sorted { $0.start < $1.start }
+        return Self.dedupe(meetings).sorted { $0.start < $1.start }
     }
 
     /// The same event invited to several of the user's calendars shares an iCalUID;
     /// keep the copy that has a join link.
-    private func dedupe(_ meetings: [Meeting]) -> [Meeting] {
+    nonisolated static func dedupe(_ meetings: [Meeting]) -> [Meeting] {
         var byUID: [String: Meeting] = [:]
         for meeting in meetings {
             if let existing = byUID[meeting.iCalUID], existing.joinURL != nil { continue }

@@ -6,16 +6,43 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		A100000000000000000000C6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A100000000000000000000A6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A100000000000000000000A5;
+			remoteInfo = Punctual;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		A100000000000000000000A4 /* Punctual.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Punctual.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A100000000000000000000C4 /* PunctualTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PunctualTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A100000000000000000000A2 /* Punctual */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Punctual;
 			sourceTree = "<group>";
 		};
+		A100000000000000000000C2 /* PunctualTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PunctualTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A100000000000000000000A8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A100000000000000000000C8 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -29,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				A100000000000000000000A2 /* Punctual */,
+				A100000000000000000000C2 /* PunctualTests */,
 				A100000000000000000000A3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -37,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				A100000000000000000000A4 /* Punctual.app */,
+				A100000000000000000000C4 /* PunctualTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -66,6 +95,29 @@
 			productReference = A100000000000000000000A4 /* Punctual.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A100000000000000000000C5 /* PunctualTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A100000000000000000000D1 /* Build configuration list for PBXNativeTarget "PunctualTests" */;
+			buildPhases = (
+				A100000000000000000000C7 /* Sources */,
+				A100000000000000000000C8 /* Frameworks */,
+				A100000000000000000000C9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A100000000000000000000CA /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A100000000000000000000C2 /* PunctualTests */,
+			);
+			name = PunctualTests;
+			packageProductDependencies = (
+			);
+			productName = PunctualTests;
+			productReference = A100000000000000000000C4 /* PunctualTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -78,6 +130,10 @@
 				TargetAttributes = {
 					A100000000000000000000A5 = {
 						CreatedOnToolsVersion = 26.0;
+					};
+					A100000000000000000000C5 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = A100000000000000000000A5;
 					};
 				};
 			};
@@ -96,12 +152,20 @@
 			projectRoot = "";
 			targets = (
 				A100000000000000000000A5 /* Punctual */,
+				A100000000000000000000C5 /* PunctualTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		A100000000000000000000A9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A100000000000000000000C9 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -118,7 +182,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A100000000000000000000C7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A100000000000000000000CA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A100000000000000000000A5 /* Punctual */;
+			targetProxy = A100000000000000000000C6 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A100000000000000000000B3 /* Debug */ = {
@@ -177,9 +256,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Punctual/Punctual.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JLMPGSCFHU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Punctual;
@@ -192,7 +273,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.4;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.jakubostwald.Punctual;
+				PRODUCT_BUNDLE_IDENTIFIER = com.punctualapp.punctual;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -203,9 +284,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Punctual/Punctual.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JLMPGSCFHU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Punctual;
@@ -218,10 +301,46 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.4;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.jakubostwald.Punctual;
+				PRODUCT_BUNDLE_IDENTIFIER = com.punctualapp.punctual;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		A100000000000000000000D5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JLMPGSCFHU;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.punctualapp.punctual.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Punctual.app/Contents/MacOS/Punctual";
+			};
+			name = Debug;
+		};
+		A100000000000000000000D6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JLMPGSCFHU;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.punctualapp.punctual.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Punctual.app/Contents/MacOS/Punctual";
 			};
 			name = Release;
 		};
@@ -242,6 +361,15 @@
 			buildConfigurations = (
 				A100000000000000000000B5 /* Debug */,
 				A100000000000000000000B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A100000000000000000000D1 /* Build configuration list for PBXNativeTarget "PunctualTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A100000000000000000000D5 /* Debug */,
+				A100000000000000000000D6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

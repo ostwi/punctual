@@ -13,7 +13,7 @@ final class AlertPresentation {
 /// Presents one full-screen AlertPanel per display so a meeting can't
 /// start unseen on a secondary monitor.
 @MainActor
-final class AlertWindowController {
+final class AlertWindowController: AlertPresenting {
     private let presentation: AlertPresentation
     private let onJoin: (Meeting) -> Void
     private let onSnooze: (Meeting) -> Void
