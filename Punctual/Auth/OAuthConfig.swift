@@ -10,10 +10,9 @@ import Foundation
 /// Maintainer setup (one time — see README "Maintainer: OAuth client" section):
 /// 1. https://console.cloud.google.com → create a project.
 /// 2. APIs & Services → Library → enable "Google Calendar API".
-/// 3. OAuth consent screen → User type: **External**; scope
-///    `calendar.readonly` is *sensitive*, so submit for Google verification
-///    (homepage + privacy policy required) to lift the "unverified app"
-///    warning and the 100-user cap.
+/// 3. OAuth consent screen → User type: **External**. The Calendar scopes below
+///    are *sensitive*, so submit for Google verification (homepage + privacy
+///    policy required) to lift the "unverified app" warning and the 100-user cap.
 /// 4. Credentials → Create credentials → OAuth client ID → Application type:
 ///    **iOS** (bundle ID: com.punctualapp.punctual).
 /// 5. Paste the client ID below.
@@ -32,7 +31,17 @@ enum OAuthConfig {
 
     static var redirectURI: String { "\(redirectScheme):/oauth2redirect" }
 
-    static let scopes = "openid email https://www.googleapis.com/auth/calendar.readonly"
+    /// Two granular read-only Calendar scopes rather than the broader
+    /// `calendar.readonly`. The app calls exactly two methods — `calendarList.list`
+    /// to discover the user's calendars and `events.list` to read them — so these
+    /// are the narrowest scopes that cover it, which is what Google's least-privilege
+    /// review asks for.
+    static let scopes = [
+        "openid",
+        "email",
+        "https://www.googleapis.com/auth/calendar.events.readonly",
+        "https://www.googleapis.com/auth/calendar.calendarlist.readonly",
+    ].joined(separator: " ")
 
     static let authorizationEndpoint = URL(string: "https://accounts.google.com/o/oauth2/v2/auth")!
     static let tokenEndpoint = URL(string: "https://oauth2.googleapis.com/token")!

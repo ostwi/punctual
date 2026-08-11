@@ -7,7 +7,7 @@ A native macOS menu bar app for Google Calendar meetings — never walk in late 
 - **Unmissable full-screen alert** when a meeting is about to start — Join / Snooze 1 min / Dismiss, shown over every app (even full-screen ones) on every display, with a configurable lead time (0/1/2/5 minutes)
 - **Sign in with Google**, launch at login, 100% native SwiftUI
 
-No Electron, no analytics, no servers: the app talks **directly** to the Google Calendar API from your Mac with the read-only `calendar.readonly` scope. Tokens live in your Keychain; calendar data never goes anywhere else.
+No Electron, no analytics, no servers: the app talks **directly** to the Google Calendar API from your Mac using two read-only scopes — `calendar.events.readonly` and `calendar.calendarlist.readonly`, the narrowest that cover reading your calendars and their events. Tokens live in your Keychain; calendar data never goes anywhere else.
 
 Requires macOS 14.4+.
 
@@ -27,7 +27,7 @@ If you received a pre-built `Punctual.app` instead: it isn't notarized, so on fi
 
 ## Sign-in and the "unverified app" screen
 
-The app ships with a shared OAuth client ID. Until Google finishes verifying the app for the sensitive `calendar.readonly` scope, the Google sign-in page may show an *"unverified app"* warning — continue via **Advanced → Go to Punctual**. Refresh tokens issued while the consent screen is in *Testing* status expire after 7 days; the app handles this by signing you out, and signing in again takes one click.
+The app ships with a shared OAuth client ID. Until Google finishes verifying the app for its sensitive Calendar scopes, the Google sign-in page may show an *"unverified app"* warning — continue via **Advanced → Go to Punctual**. Refresh tokens issued while the consent screen is in *Testing* status expire after 7 days; the app handles this by signing you out, and signing in again takes one click.
 
 ## Architecture
 
@@ -57,7 +57,7 @@ The shared client ID in `Punctual/Auth/OAuthConfig.swift` is a public identifier
 3. **Credentials → Create credentials → OAuth client ID** → type **iOS**, bundle ID `com.punctualapp.punctual`. Paste the resulting client ID into `OAuthConfig.swift`.
 4. **Verification** (lifts the unverified-app warning and the 100-user cap):
    - Host a homepage and privacy policy on a domain you can verify in [Google Search Console](https://search.google.com/search-console) — a GitHub Pages site works.
-   - On the consent screen, set the homepage, privacy policy URL, and authorized domain; add the `calendar.readonly` scope with a justification ("displays the user's upcoming meetings in the macOS menu bar").
+   - On the consent screen, set the homepage, privacy policy URL, and authorized domain; add the `calendar.events.readonly` and `calendar.calendarlist.readonly` scopes with a justification ("displays the user's upcoming meetings in the macOS menu bar").
    - Publish to Production and submit for verification; sensitive-scope review typically takes a few days to a few weeks and may ask for a short demo video of the sign-in flow.
 
 Forks that change the bundle ID must create their own client ID (it's bound to the bundle ID).
