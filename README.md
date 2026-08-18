@@ -25,9 +25,11 @@ Set Signing & Capabilities → Team to your (free) Personal Team, then Run. The 
 
 If you received a pre-built `Punctual.app` instead: it isn't notarized, so on first launch approve it under **System Settings → Privacy & Security → "Open Anyway"**.
 
-## Sign-in and the "unverified app" screen
+## Sign-in
 
-The app ships with a shared OAuth client ID. Until Google finishes verifying the app for its sensitive Calendar scopes, the Google sign-in page may show an *"unverified app"* warning — continue via **Advanced → Go to Punctual**. Refresh tokens issued while the consent screen is in *Testing* status expire after 7 days; the app handles this by signing you out, and signing in again takes one click.
+The app ships with a shared OAuth client ID. Google has verified it for the sensitive Calendar scopes it requests, so sign-in is a normal Google consent screen — no "unverified app" warning, no user cap, and refresh tokens do not expire on a timer.
+
+Punctual asks for two read-only scopes and nothing else: `calendar.calendarlist.readonly`, to see which calendars you have, and `calendar.events.readonly`, to read their events. It cannot create, edit, or delete anything.
 
 ## Architecture
 
@@ -55,7 +57,7 @@ The shared client ID in `Punctual/Auth/OAuthConfig.swift` is a public identifier
 1. [console.cloud.google.com](https://console.cloud.google.com) → create a project → enable **Google Calendar API**.
 2. **OAuth consent screen**: User type **External**. App name `Punctual`, your support email.
 3. **Credentials → Create credentials → OAuth client ID** → type **iOS**, bundle ID `com.punctualapp.punctual`. Paste the resulting client ID into `OAuthConfig.swift`.
-4. **Verification** (lifts the unverified-app warning and the 100-user cap):
+4. **Verification** — done for this client ID (approved August 2026). A fork with its own client ID needs to repeat it, since verification is per-project. It lifts the unverified-app warning and the 100-user cap:
    - Host a homepage and privacy policy on a domain you can verify in [Google Search Console](https://search.google.com/search-console) — a GitHub Pages site works.
    - On the consent screen, set the homepage, privacy policy URL, and authorized domain; add the `calendar.events.readonly` and `calendar.calendarlist.readonly` scopes with a justification ("displays the user's upcoming meetings in the macOS menu bar").
    - Publish to Production and submit for verification; sensitive-scope review typically takes a few days to a few weeks and may ask for a short demo video of the sign-in flow.
