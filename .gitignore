@@ -15,8 +15,8 @@ build/
 
 # OAuth verification demo recordings. These show a real Google account's email
 # address, calendar contents, and open browser tabs — never publish them.
-Punctual_app_review*.mp4
-Punctual_app_review*.srt
+*review*.mp4
+*review*.srt
 
 # Internal working notes: Google verification strategy, the draft reply to
 # Trust & Safety, and unreleased App Store copy. Not for the public repo.
