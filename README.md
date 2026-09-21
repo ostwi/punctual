@@ -3,7 +3,7 @@
 A native macOS menu bar app for Google Calendar meetings — never walk in late again.
 
 - **Menu bar countdown**: your next meeting and how long until it starts ("Standup in 12m")
-- **Today at a glance**: click the menu bar item for today's remaining meetings with one-click **Join** (Google Meet, Zoom, Microsoft Teams)
+- **Today at a glance**: click the menu bar item for today's remaining meetings with one-click **Join** (Google Meet, Zoom, Microsoft Teams, Webex)
 - **Unmissable full-screen alert** when a meeting is about to start — Join / Snooze 1 min / Dismiss, shown over every app (even full-screen ones) on every display, with a configurable lead time (0/1/2/5 minutes)
 - **Sign in with Google**, launch at login, 100% native SwiftUI
 
@@ -13,17 +13,17 @@ Requires macOS 14.4+.
 
 ## Install
 
-Until there's a notarized release build, build from source:
+Download the notarized `Punctual-*.dmg` from [Releases](https://github.com/ostwi/punctual/releases), open it, and drag Punctual to Applications. The app appears in the menu bar — there is no Dock icon.
+
+### Build from source
 
 ```
-git clone <repo-url>
+git clone https://github.com/ostwi/punctual.git
 cd punctual
 open Punctual.xcodeproj
 ```
 
-Set Signing & Capabilities → Team to your (free) Personal Team, then Run. The app appears in the menu bar — there is no Dock icon.
-
-If you received a pre-built `Punctual.app` instead: it isn't notarized, so on first launch approve it under **System Settings → Privacy & Security → "Open Anyway"**.
+Set Signing & Capabilities → Team to your (free) Personal Team, then Run.
 
 ## Sign-in
 
