@@ -75,6 +75,22 @@ final class JoinLinkExtractorTests: XCTestCase {
         XCTAssertEqual(url?.absoluteString, "https://teams.live.com/meet/9312345678901")
     }
 
+    func testExtractsWebexPersonalRoomLink() {
+        let url = JoinLinkExtractor.firstMeetingURL(in: "Webex: https://acme.webex.com/meet/jane.doe")
+        XCTAssertEqual(url?.absoluteString, "https://acme.webex.com/meet/jane.doe")
+    }
+
+    func testExtractsWebexClassicLinkFromHTMLDescription() {
+        let url = JoinLinkExtractor.firstMeetingURL(
+            in: #"<a href="https://acme.webex.com/acme/j.php?MTID=m1a2b3c&amp;lang=en">Join meeting</a>"#
+        )
+        XCTAssertEqual(url?.absoluteString, "https://acme.webex.com/acme/j.php?MTID=m1a2b3c&lang=en")
+    }
+
+    func testIgnoresNonMeetingWebexLinks() {
+        XCTAssertNil(JoinLinkExtractor.firstMeetingURL(in: "Get the app: https://www.webex.com/downloads.html"))
+    }
+
     func testExtractsGoogleMeetFromText() {
         let url = JoinLinkExtractor.firstMeetingURL(in: "Room A — https://meet.google.com/abc-defg-hij or dial in")
         XCTAssertEqual(url?.absoluteString, "https://meet.google.com/abc-defg-hij")

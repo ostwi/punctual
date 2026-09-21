@@ -27,6 +27,8 @@ enum JoinLinkExtractor {
             #"https://[\w.\-]*zoom\.us/(j|my|w|s)/[^\s"'<>]+"#,
             #"https://teams\.microsoft\.com/(l/meetup-join|meet)/[^\s"'<>]+"#,
             #"https://teams\.live\.com/meet/[^\s"'<>]+"#,
+            // Personal rooms (/meet/), join links (/join/), and classic site links (/<site>/j.php).
+            #"https://[\w\-]+\.webex\.com/(meet|join|[\w\-]+/j\.php|[\w\-]+/meet|wbxmjs/joinservice)[/?][^\s"'<>]+"#,
         ]
         for pattern in patterns {
             if let range = unescaped.range(of: pattern, options: .regularExpression) {
