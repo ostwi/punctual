@@ -11,8 +11,8 @@ final class RefreshCoordinator {
     func start() {
         guard timer == nil else { return }
 
-        let timer = Timer(timeInterval: 60, repeats: true) { _ in
-            Task { @MainActor [weak self] in
+        let timer = Timer(timeInterval: 60, repeats: true) { [weak self] _ in
+            Task { @MainActor in
                 await self?.onRefresh()
             }
         }

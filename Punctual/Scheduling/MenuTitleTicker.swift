@@ -30,8 +30,8 @@ final class MenuTitleTicker {
             interval = 60
         }
 
-        let timer = Timer(timeInterval: interval, repeats: false) { _ in
-            Task { @MainActor [weak self] in
+        let timer = Timer(timeInterval: interval, repeats: false) { [weak self] _ in
+            Task { @MainActor in
                 self?.onTick()
             }
         }
