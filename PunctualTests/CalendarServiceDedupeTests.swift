@@ -78,4 +78,22 @@ final class CalendarServiceDedupeTests: XCTestCase {
         XCTAssertEqual(result.count, 2)
         XCTAssertEqual(result.first { $0.start == workToday.start }?.calendarID, "personal")
     }
+
+    // Calendars are fetched concurrently, so dedupe must pick the same copy for any input order.
+
+    func testTieBetweenLinkedCopiesKeepsSameCopyRegardlessOfOrder() {
+        let work = meeting(id: "a", iCalUID: "uid1", calendarID: "work", withLink: true)
+        let personal = meeting(id: "b", iCalUID: "uid1", calendarID: "personal", withLink: true)
+
+        XCTAssertEqual(CalendarService.dedupe([work, personal]).map(\.id), ["b"])
+        XCTAssertEqual(CalendarService.dedupe([personal, work]).map(\.id), ["b"])
+    }
+
+    func testTieBetweenUnlinkedCopiesKeepsSameCopyRegardlessOfOrder() {
+        let work = meeting(id: "a", iCalUID: "uid1", calendarID: "work", withLink: false)
+        let personal = meeting(id: "b", iCalUID: "uid1", calendarID: "personal", withLink: false)
+
+        XCTAssertEqual(CalendarService.dedupe([work, personal]).map(\.id), ["b"])
+        XCTAssertEqual(CalendarService.dedupe([personal, work]).map(\.id), ["b"])
+    }
 }

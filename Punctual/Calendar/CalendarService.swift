@@ -57,10 +57,19 @@ struct CalendarService {
         var byKey: [Key: Meeting] = [:]
         for meeting in meetings {
             let key = Key(iCalUID: meeting.iCalUID, start: meeting.start)
-            if let existing = byKey[key], existing.joinURL != nil { continue }
+            if let existing = byKey[key], !isPreferred(meeting, over: existing) { continue }
             byKey[key] = meeting
         }
         return Array(byKey.values)
+    }
+
+    /// The copy with a join link wins; otherwise the lowest (calendarID, id) does.
+    /// Calendars are fetched concurrently, so input order varies between refreshes —
+    /// the winner must not, because alert state is keyed on the surviving `Meeting.id`.
+    private nonisolated static func isPreferred(_ candidate: Meeting, over existing: Meeting) -> Bool {
+        let candidateHasLink = candidate.joinURL != nil
+        if candidateHasLink != (existing.joinURL != nil) { return candidateHasLink }
+        return (candidate.calendarID, candidate.id) < (existing.calendarID, existing.id)
     }
 
     private func fetchSelectedCalendarIDs(token: String) async throws -> [String] {

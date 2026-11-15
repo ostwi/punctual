@@ -3,7 +3,8 @@ import Foundation
 /// A timed (non-all-day, non-declined) calendar event for today or tomorrow.
 struct Meeting: Identifiable, Equatable, Hashable {
     let id: String          // event instance id, unique within a calendar
-    let iCalUID: String     // stable across calendar copies; used for dedupe
+    let iCalUID: String     // identifies the event (or whole recurring series) across calendar copies;
+                            // not unique per instance — dedupe pairs it with the start time
     let calendarID: String
     let title: String
     let start: Date
