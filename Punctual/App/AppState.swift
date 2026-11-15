@@ -28,6 +28,9 @@ final class AppState {
     @ObservationIgnored private let ticker = MenuTitleTicker()
     @ObservationIgnored private let refreshCoordinator = RefreshCoordinator()
     @ObservationIgnored private var defaultsObserver: NSObjectProtocol?
+    /// Bumped by each refresh; a refresh whose number is no longer current
+    /// drops its result instead of overwriting a newer one's.
+    @ObservationIgnored private var refreshGeneration = 0
 
     init() {
         if let tokens = auth.storedTokens {
@@ -85,8 +88,13 @@ final class AppState {
             tick()
             return
         }
+        refreshGeneration += 1
+        let generation = refreshGeneration
         do {
             let result = try await calendarService.fetchMeetings()
+            // Refreshes can overlap (a Settings switch flipped twice, the periodic
+            // timer, the refresh button); only the latest one may update state.
+            guard generation == refreshGeneration else { return }
             meetings = result.meetings
             calendars = result.calendars
             lastUpdated = Date()
@@ -97,6 +105,7 @@ final class AppState {
         } catch is CancellationError {
             return
         } catch {
+            guard generation == refreshGeneration else { return }
             // Keep showing the last good data; surface the problem subtly.
             lastError = error.localizedDescription
         }
