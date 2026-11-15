@@ -46,17 +46,19 @@ struct CalendarService {
     }
 
     /// The same event invited to several of the user's calendars shares an iCalUID
-    /// and a start time; keep the copy that has a join link. Every instance of a
-    /// recurring series also shares the iCalUID, so the start time is part of the
-    /// key — otherwise today's and tomorrow's instances collapse into one.
+    /// and an occurrence; keep the copy that has a join link. Every instance of a
+    /// recurring series also shares the iCalUID, so the occurrence is part of the
+    /// key — otherwise today's and tomorrow's instances collapse into one. The
+    /// occurrence is the instance's original slot in the series rather than its
+    /// current start, so copies still merge while a reschedule propagates.
     nonisolated static func dedupe(_ meetings: [Meeting]) -> [Meeting] {
         struct Key: Hashable {
             let iCalUID: String
-            let start: Date
+            let occurrence: Date
         }
         var byKey: [Key: Meeting] = [:]
         for meeting in meetings {
-            let key = Key(iCalUID: meeting.iCalUID, start: meeting.start)
+            let key = Key(iCalUID: meeting.iCalUID, occurrence: meeting.occurrence)
             if let existing = byKey[key], !isPreferred(meeting, over: existing) { continue }
             byKey[key] = meeting
         }
@@ -103,30 +105,35 @@ struct CalendarService {
             URLQueryItem(name: "maxResults", value: "50"),
             URLQueryItem(
                 name: "fields",
-                value: "items(id,iCalUID,status,summary,start,end,location,description,"
-                    + "hangoutLink,htmlLink,conferenceData(entryPoints),attendees(self,responseStatus))"
+                value: "items(id,iCalUID,recurringEventId,originalStartTime,status,summary,start,end,"
+                    + "location,description,hangoutLink,htmlLink,conferenceData(entryPoints),attendees(self,responseStatus))"
             ),
         ]
         let response: GCalEventsResponse = try await get(components.url!, token: token)
 
-        return (response.items ?? []).compactMap { event in
-            guard event.status != "cancelled",
-                  !event.isAllDay,
-                  !event.isDeclinedByMe,
-                  let start = event.start?.parsedDateTime,
-                  let end = event.end?.parsedDateTime
-            else { return nil }
-            return Meeting(
-                id: event.id,
-                iCalUID: event.iCalUID ?? event.id,
-                calendarID: calendarID,
-                title: event.summary?.isEmpty == false ? event.summary! : "(No title)",
-                start: start,
-                end: end,
-                joinURL: JoinLinkExtractor.joinURL(for: event),
-                htmlLink: event.htmlLink.flatMap(URL.init(string:))
-            )
-        }
+        return (response.items ?? []).compactMap { meeting(from: $0, calendarID: calendarID) }
+    }
+
+    /// Maps an API event to a Meeting, or nil for events the app doesn't show
+    /// (cancelled, all-day, declined, or without a parseable start and end).
+    nonisolated static func meeting(from event: GCalEvent, calendarID: String) -> Meeting? {
+        guard event.status != "cancelled",
+              !event.isAllDay,
+              !event.isDeclinedByMe,
+              let start = event.start?.parsedDateTime,
+              let end = event.end?.parsedDateTime
+        else { return nil }
+        return Meeting(
+            id: event.id,
+            iCalUID: event.iCalUID ?? event.id,
+            calendarID: calendarID,
+            title: event.summary?.isEmpty == false ? event.summary! : "(No title)",
+            start: start,
+            end: end,
+            joinURL: JoinLinkExtractor.joinURL(for: event),
+            htmlLink: event.htmlLink.flatMap(URL.init(string:)),
+            originalStart: event.originalStartTime?.parsedDateTime
+        )
     }
 
     private nonisolated static func get<T: Decodable>(_ url: URL, token: String) async throws -> T {

@@ -20,6 +20,10 @@ struct GCalEventsResponse: Decodable {
 struct GCalEvent: Decodable {
     let id: String
     let iCalUID: String?
+    let recurringEventId: String?
+    /// For an instance of a recurring series, the start it had in the series before
+    /// any reschedule. Stays the same when that one instance is moved.
+    let originalStartTime: GCalEventTime?
     let status: String?
     let summary: String?
     let start: GCalEventTime?

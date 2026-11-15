@@ -4,7 +4,7 @@ import XCTest
 final class CalendarServiceDedupeTests: XCTestCase {
     private func meeting(
         id: String, iCalUID: String, calendarID: String = "primary", withLink: Bool,
-        start: TimeInterval = 800_000_000
+        start: TimeInterval = 800_000_000, originalStart: TimeInterval? = nil
     ) -> Meeting {
         Meeting(
             id: id,
@@ -14,7 +14,8 @@ final class CalendarServiceDedupeTests: XCTestCase {
             start: Date(timeIntervalSinceReferenceDate: start),
             end: Date(timeIntervalSinceReferenceDate: start + 1_800),
             joinURL: withLink ? URL(string: "https://meet.google.com/abc-defg-hij") : nil,
-            htmlLink: nil
+            htmlLink: nil,
+            originalStart: originalStart.map { Date(timeIntervalSinceReferenceDate: $0) }
         )
     }
 
@@ -95,5 +96,69 @@ final class CalendarServiceDedupeTests: XCTestCase {
 
         XCTAssertEqual(CalendarService.dedupe([work, personal]).map(\.id), ["b"])
         XCTAssertEqual(CalendarService.dedupe([personal, work]).map(\.id), ["b"])
+    }
+
+    // A rescheduled instance keeps its original slot in the series (originalStartTime),
+    // so copies still merge while the new time propagates between calendars.
+
+    func testRescheduledInstanceMergesWhileCopiesDisagreeOnStart() {
+        let slot: TimeInterval = 800_000_000
+        let moved = meeting(id: "a_1", iCalUID: "series", calendarID: "work", withLink: true,
+                            start: slot + 1_800, originalStart: slot)
+        let lagging = meeting(id: "b_1", iCalUID: "series", calendarID: "subscribed", withLink: false,
+                              start: slot, originalStart: slot)
+
+        XCTAssertEqual(CalendarService.dedupe([moved, lagging]).map(\.id), ["a_1"])
+    }
+
+    func testInstanceMovedOntoAnotherInstancesTimeStaysSeparate() {
+        let today = meeting(id: "a_1", iCalUID: "series", withLink: true,
+                            start: 800_000_000, originalStart: 800_000_000)
+        let tomorrowMovedToToday = meeting(id: "a_2", iCalUID: "series", withLink: true,
+                                           start: 800_000_000, originalStart: 800_000_000 + day)
+
+        XCTAssertEqual(CalendarService.dedupe([today, tomorrowMovedToToday]).count, 2)
+    }
+
+    // Mapping from the API response.
+
+    private func event(_ json: String) throws -> GCalEvent {
+        try JSONDecoder().decode(GCalEvent.self, from: Data(json.utf8))
+    }
+
+    func testMapsOriginalStartTimeOfRecurringInstance() throws {
+        let event = try event("""
+        {
+            "id": "series_20260616T080000Z",
+            "iCalUID": "series@google.com",
+            "recurringEventId": "series",
+            "summary": "Standup",
+            "start": {"dateTime": "2026-06-16T10:30:00+02:00"},
+            "end": {"dateTime": "2026-06-16T10:45:00+02:00"},
+            "originalStartTime": {"dateTime": "2026-06-16T10:00:00+02:00"}
+        }
+        """)
+
+        let meeting = try XCTUnwrap(CalendarService.meeting(from: event, calendarID: "primary"))
+
+        XCTAssertEqual(meeting.originalStart, ISO8601DateFormatter().date(from: "2026-06-16T08:00:00Z"))
+        XCTAssertEqual(meeting.occurrence, meeting.originalStart)
+        XCTAssertNotEqual(meeting.occurrence, meeting.start)
+    }
+
+    func testOneOffEventUsesStartAsOccurrence() throws {
+        let event = try event("""
+        {
+            "id": "oneoff",
+            "iCalUID": "oneoff@google.com",
+            "start": {"dateTime": "2026-06-16T10:00:00Z"},
+            "end": {"dateTime": "2026-06-16T11:00:00Z"}
+        }
+        """)
+
+        let meeting = try XCTUnwrap(CalendarService.meeting(from: event, calendarID: "primary"))
+
+        XCTAssertNil(meeting.originalStart)
+        XCTAssertEqual(meeting.occurrence, meeting.start)
     }
 }
