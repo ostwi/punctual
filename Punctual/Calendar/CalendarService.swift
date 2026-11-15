@@ -24,8 +24,9 @@ struct CalendarService {
 
     private func fetchAll(token: String) async throws -> CalendarFetchResult {
         let calendars = try await fetchCalendarList(token: token)
+        let overrides = AppSettings.calendarOverrides()
         let calendarIDs = calendars
-            .filter { AppSettings.isCalendarEnabled(id: $0.id, selectedInGoogle: $0.selectedInGoogle) }
+            .filter { AppSettings.isCalendarEnabled(id: $0.id, selectedInGoogle: $0.selectedInGoogle, overrides: overrides) }
             .map(\.id)
 
         let calendar = Calendar.current

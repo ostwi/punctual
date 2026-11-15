@@ -24,7 +24,14 @@ enum AppSettings {
     static func isCalendarEnabled(
         id: String, selectedInGoogle: Bool, defaults: UserDefaults = .standard
     ) -> Bool {
-        calendarOverrides(defaults: defaults)[id] ?? selectedInGoogle
+        isCalendarEnabled(id: id, selectedInGoogle: selectedInGoogle, overrides: calendarOverrides(defaults: defaults))
+    }
+
+    /// The one rule for whether Punctual watches a calendar: the user's explicit
+    /// choice if there is one, otherwise Google Calendar's "selected" flag. Used by
+    /// both the fetch and the Settings switches so they can't disagree.
+    static func isCalendarEnabled(id: String, selectedInGoogle: Bool, overrides: [String: Bool]) -> Bool {
+        overrides[id] ?? selectedInGoogle
     }
 
     static func setCalendar(id: String, enabled: Bool, defaults: UserDefaults = .standard) {

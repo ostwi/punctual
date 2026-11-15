@@ -136,7 +136,9 @@ struct SettingsView: View {
     private func calendarBinding(for calendar: CalendarInfo) -> Binding<Bool> {
         Binding(
             get: {
-                calendarOverrides[calendar.id] ?? calendar.selectedInGoogle
+                AppSettings.isCalendarEnabled(
+                    id: calendar.id, selectedInGoogle: calendar.selectedInGoogle, overrides: calendarOverrides
+                )
             },
             set: { enabled in
                 AppSettings.setCalendar(id: calendar.id, enabled: enabled)

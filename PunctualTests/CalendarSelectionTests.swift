@@ -42,4 +42,13 @@ final class CalendarSelectionTests: XCTestCase {
 
         XCTAssertTrue(AppSettings.isCalendarEnabled(id: "a", selectedInGoogle: false, defaults: defaults))
     }
+
+    func testRuleWithExplicitOverridesMatchesStoredRule() {
+        let overrides = ["a": false, "b": true]
+
+        XCTAssertFalse(AppSettings.isCalendarEnabled(id: "a", selectedInGoogle: true, overrides: overrides))
+        XCTAssertTrue(AppSettings.isCalendarEnabled(id: "b", selectedInGoogle: false, overrides: overrides))
+        XCTAssertTrue(AppSettings.isCalendarEnabled(id: "c", selectedInGoogle: true, overrides: overrides))
+        XCTAssertFalse(AppSettings.isCalendarEnabled(id: "d", selectedInGoogle: false, overrides: overrides))
+    }
 }
