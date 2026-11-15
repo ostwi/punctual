@@ -14,6 +14,8 @@ final class AppState {
 
     var authState: AuthState = .signedOut
     var meetings: [Meeting] = []
+    /// Every calendar on the account, for the Settings picker.
+    var calendars: [CalendarInfo] = []
     var menuTitle: String = "…"
     var lastUpdated: Date?
     var lastError: String?
@@ -26,6 +28,9 @@ final class AppState {
     @ObservationIgnored private let ticker = MenuTitleTicker()
     @ObservationIgnored private let refreshCoordinator = RefreshCoordinator()
     @ObservationIgnored private var defaultsObserver: NSObjectProtocol?
+    /// Bumped by each refresh; a refresh whose number is no longer current
+    /// drops its result instead of overwriting a newer one's.
+    @ObservationIgnored private var refreshGeneration = 0
 
     init() {
         if let tokens = auth.storedTokens {
@@ -83,16 +88,26 @@ final class AppState {
             tick()
             return
         }
+        refreshGeneration += 1
+        let generation = refreshGeneration
         do {
-            meetings = try await calendarService.fetchMeetings()
+            let result = try await calendarService.fetchMeetings()
+            // Refreshes can overlap (a Settings switch flipped twice, the periodic
+            // timer, the refresh button); only the latest one may update state.
+            guard generation == refreshGeneration else { return }
+            meetings = CalendarService.merge(
+                fetched: result.meetings, previous: meetings, failedCalendarIDs: result.failedCalendarIDs
+            )
+            calendars = result.calendars
             lastUpdated = Date()
-            lastError = nil
+            lastError = Self.failureMessage(for: result)
         } catch AuthError.signedOut {
             handleSignedOut()
             return
         } catch is CancellationError {
             return
         } catch {
+            guard generation == refreshGeneration else { return }
             // Keep showing the last good data; surface the problem subtly.
             lastError = error.localizedDescription
         }
@@ -102,6 +117,16 @@ final class AppState {
         // and close the alert moments after the meeting starts.
         alertScheduler.reconcile(meetings: remainingMeetings)
         tick()
+    }
+
+    /// Names the calendars that couldn't be loaded, or nil if all of them were.
+    private static func failureMessage(for result: CalendarFetchResult) -> String? {
+        guard !result.failedCalendarIDs.isEmpty else { return nil }
+        let names = result.calendars
+            .filter { result.failedCalendarIDs.contains($0.id) }
+            .map(\.name)
+            .joined(separator: ", ")
+        return "Couldn't load \(names). Other calendars are up to date."
     }
 
     /// Recomputes the menu title and re-arms the ticker for the next change.
@@ -142,6 +167,7 @@ final class AppState {
     private func handleSignedOut() {
         authState = .signedOut
         meetings = []
+        calendars = []
         lastUpdated = nil
         alertScheduler.clearAll()
         tick()
