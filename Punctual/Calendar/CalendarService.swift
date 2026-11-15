@@ -33,23 +33,56 @@ struct CalendarService {
         let startOfDay = calendar.startOfDay(for: Date())
         let endOfTomorrow = calendar.date(byAdding: .day, value: 2, to: startOfDay)!
 
-        let meetings = try await withThrowingTaskGroup(of: [Meeting].self) { group in
+        // One calendar failing (deleted, access revoked, a transient error) must
+        // not fail the whole refresh: the other calendars and the Settings picker
+        // keep working, and the user can switch the broken calendar off. Auth
+        // errors and cancellation still propagate so the caller can react.
+        let (meetings, failedCalendarIDs) = try await withThrowingTaskGroup(
+            of: (calendarID: String, meetings: [Meeting]?).self
+        ) { group in
             for calendarID in calendarIDs {
                 group.addTask {
-                    try await Self.fetchEvents(
-                        calendarID: calendarID, token: token,
-                        timeMin: startOfDay, timeMax: endOfTomorrow
-                    )
+                    do {
+                        let meetings = try await Self.fetchEvents(
+                            calendarID: calendarID, token: token,
+                            timeMin: startOfDay, timeMax: endOfTomorrow
+                        )
+                        return (calendarID, meetings)
+                    } catch CalendarAPIError.unauthorized {
+                        throw CalendarAPIError.unauthorized
+                    } catch is CancellationError {
+                        throw CancellationError()
+                    } catch {
+                        return (calendarID, nil)
+                    }
                 }
             }
             var merged: [Meeting] = []
-            for try await batch in group { merged.append(contentsOf: batch) }
-            return merged
+            var failed: Set<String> = []
+            for try await batch in group {
+                if let meetings = batch.meetings {
+                    merged.append(contentsOf: meetings)
+                } else {
+                    failed.insert(batch.calendarID)
+                }
+            }
+            return (merged, failed)
         }
         return CalendarFetchResult(
             calendars: calendars,
-            meetings: Self.dedupe(meetings).sorted { $0.start < $1.start }
+            meetings: Self.dedupe(meetings).sorted { $0.start < $1.start },
+            failedCalendarIDs: failedCalendarIDs
         )
+    }
+
+    /// The fetched meetings plus, for each calendar that failed this time, the
+    /// meetings it had before, so a transient failure doesn't drop its alerts.
+    nonisolated static func merge(
+        fetched: [Meeting], previous: [Meeting], failedCalendarIDs: Set<String>
+    ) -> [Meeting] {
+        guard !failedCalendarIDs.isEmpty else { return fetched }
+        let kept = previous.filter { failedCalendarIDs.contains($0.calendarID) }
+        return dedupe(fetched + kept).sorted { $0.start < $1.start }
     }
 
     /// The same event invited to several of the user's calendars shares an iCalUID;
@@ -160,6 +193,8 @@ struct CalendarInfo: Identifiable, Equatable, Sendable {
 struct CalendarFetchResult: Sendable {
     let calendars: [CalendarInfo]
     let meetings: [Meeting]
+    /// Enabled calendars whose events couldn't be fetched this time.
+    var failedCalendarIDs: Set<String> = []
 }
 
 enum CalendarAPIError: LocalizedError {

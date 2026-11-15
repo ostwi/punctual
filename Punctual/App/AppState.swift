@@ -95,10 +95,12 @@ final class AppState {
             // Refreshes can overlap (a Settings switch flipped twice, the periodic
             // timer, the refresh button); only the latest one may update state.
             guard generation == refreshGeneration else { return }
-            meetings = result.meetings
+            meetings = CalendarService.merge(
+                fetched: result.meetings, previous: meetings, failedCalendarIDs: result.failedCalendarIDs
+            )
             calendars = result.calendars
             lastUpdated = Date()
-            lastError = nil
+            lastError = Self.failureMessage(for: result)
         } catch AuthError.signedOut {
             handleSignedOut()
             return
@@ -115,6 +117,16 @@ final class AppState {
         // and close the alert moments after the meeting starts.
         alertScheduler.reconcile(meetings: remainingMeetings)
         tick()
+    }
+
+    /// Names the calendars that couldn't be loaded, or nil if all of them were.
+    private static func failureMessage(for result: CalendarFetchResult) -> String? {
+        guard !result.failedCalendarIDs.isEmpty else { return nil }
+        let names = result.calendars
+            .filter { result.failedCalendarIDs.contains($0.id) }
+            .map(\.name)
+            .joined(separator: ", ")
+        return "Couldn't load \(names). Other calendars are up to date."
     }
 
     /// Recomputes the menu title and re-arms the ticker for the next change.
