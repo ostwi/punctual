@@ -35,7 +35,7 @@ struct SettingsView: View {
             } header: {
                 Text("Calendars")
             } footer: {
-                Text("Only events from checked calendars trigger alerts. Until you change a calendar here, it follows whether it is shown in Google Calendar.")
+                Text("Only calendars turned on here appear in Punctual and trigger alerts. Until you change one, it follows whether it is shown in Google Calendar.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
