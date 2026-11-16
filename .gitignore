@@ -21,3 +21,6 @@ build/
 # Internal working notes: Google verification strategy, the draft reply to
 # Trust & Safety, and unreleased App Store copy. Not for the public repo.
 docs/
+
+# Local scripts: release tooling and its notarization credentials. Not for the public repo.
+scripts/
